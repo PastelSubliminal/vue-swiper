@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>
+  <style>
+    .slider-wrapper {
+      overflow: hidden;
+      position: relative;
+      border: 1px solid black;
+    }
+    .indicators {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      width: 100%;
+      padding: 0;
+      margin: 0;
+      text-align: center;
+    }
+    .indicators > li {
+      width: 15px;
+      height: 15px;
+      border: 3px solid grey;
+      border-radius: 999px;
+      display: inline-block;
+      cursor: pointer;
+    }
+    .indicators > li.active {
+      border-color: red;
+    }
+
+    .slider-imgs {
+      height: 100%;
+      width: 9999px;
+      position: absolute;
+      margin: 0;
+      padding: 0;
+      list-style-type: none;
+      transition: left 1s;
+    }
+    .slider-imgs li {
+      float: left;
+
+    }
+    .slider-btn {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      height: 30px;
+      margin: auto;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+
+    <MySliderComponent title="sofiwef" :autoplay="true" :imgs="cats" :indicators="true" :autoplay-duration="1000"></MySliderComponent>
+    <slider :autoplay="false" :imgs="cats.slice(1,3)" :indicators="true"></slider>
+
+  </div>
+
+  <script xtype="x">
+    Vue.component('MySliderComponent', {
+      // props: ['width', 'height', 'imgs', 'buttons', 'indicators', 'autoplay', 'autoplay-duration'],
+      props: {
+        width: {default: 400, type: Number},
+        height: {default: 300, type: Number},
+        imgs: {required: true, type: Array},
+        buttons: {default: true, type: Boolean},
+        indicators: {default: false, type: Boolean},
+        autoplay: {default: true, type: Boolean},
+        autoplayDuration: {default: 3000, type: Number},
+      },
+      inheritAttrs: false,
+      template: `
+        <div :style="wrapperStyle" class="slider-wrapper" @mouseenter="pause" @mouseleave="resume">
+          <ul :style="{left: -currentIdx * width + 'px'}" class="slider-imgs">
+            <li v-for="img of imgs">
+              <img :width="width" :height="height" :src="img">
+            </li>
+          </ul>
+          <button v-if="buttons" style="left: 0" class="slider-btn" @click="prev">prev</button>
+          <button v-if="buttons" style="right: 0" class="slider-btn" @click="next">next</button>
+          <ul v-if="indicators" class="indicators">
+            <li v-for="(img, index) of imgs" @click="currentIdx = index" :class="{active: currentIdx == index}"></li>
+          </ul>
+        </div>
+      `,
+      data() {
+        console.log(this.$attrs)
+        return {
+          currentIdx: 0,
+          intervalId: -1,
+          wrapperStyle: {
+            width: this.width + 'px',
+            height: this.height + 'px'
+          },
+        }
+      },
+      methods: {
+        next() {
+          this.currentIdx++
+          if (this.currentIdx > this.imgs.length - 1) {
+            this.currentIdx = 0
+          }
+        },
+        prev() {
+          this.currentIdx--
+          if (this.currentIdx < 0) {
+            this.currentIdx = this.imgs.length - 1
+          }
+        },
+        pause() {
+          clearInterval(this.intervalId)
+        },
+        resume() {
+          if (this.autoplay) {
+            this.intervalId = setInterval(() => {
+              this.next()
+            }, this.autoplayDuration)
+          }
+        },
+      },
+      mounted() {
+        this.resume()
+      }
+    })
+
+
+    Vue.component('JsonInput', {
+      props: ['value'],
+      template: `
+        <textarea @input="parse" :value="jsonText"></textarea>
+      `,
+      data() {
+        return {
+          jsonText: JSON.stringify(this.value)
+        }
+      },
+      watch: {
+        value(newVal, oldVal) {
+          this.jsonText = JSON.stringify(newVal)
+        }
+      },
+      methods: {
+        parse(e) {
+          var inputText = e.target.value
+          try{
+            var result = JSON.parse(inputText)
+            this.$emit('input', result)
+          } catch(e) {
+            console.log(e)
+          }
+        }
+      }
+    })
+
+    Vue.component('ListInput', {
+      props: {
+        value: {
+          required: true,
+          type: Array,
+        }
+      },
+      template: `<input @input="parse" :value="listStr"   />`,
+      data() {
+        return {
+          listStr: this.value.join(', ')
+        }
+      },
+      methods: {
+        parse(e) {
+          newVal = e.target.value.trim()
+          if (newVal.endsWith(',')) {
+            return
+          }
+          var list = newVal.split(',').map(it => it.trim())
+          this.$emit('input', list)
+        }
+      },
+      watch: {
+        value(newVal) {
+          this.listStr = newVal.join(', ')
+        },
+      }
+
+    })
+
+
+    Vue.component('my-checkbox', {
+
+    })
+
+
+    var app = new Vue({
+      el: '.container',
+      template: `
+        <div class="container">
+
+          <my-checkbox v-model="reme"></my-checkbox>
+
+
+
+
+          <input type="text" v-model="msg">
+          <div>{{ msg }}</div>
+          <MySliderComponent class="aa bb" foo="bar" title="jowief" :autoplay="true" :imgs="cats" :indicators="true" :autoplayDuration="5000"></MySliderComponent>
+
+        </div>
+      `,
+      methods: {
+        log(...args) {
+          console.log(...args)
+        }
+      },
+      data: {
+        fruits: ['orange', 'apple', 'google'],
+        jsonData: {
+          a:1,
+          b:2,
+          c: [1,2,3]
+        },
+        msg: 'hello world',
+        cats: [
+          'https://xieranmaya.github.io/images/cats/stock-photo-135203031.jpg',
+          'https://xieranmaya.github.io/images/cats/stock-photo-147877407.jpg',
+          'https://xieranmaya.github.io/images/cats/stock-photo-144530143.jpg',
+          'https://xieranmaya.github.io/images/cats/stock-photo-7979718.jpg',
+        ]
+      }
+    })
+
+
+
+
+  </script>
+</body>
+</html>
